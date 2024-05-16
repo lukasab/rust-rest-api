@@ -12,7 +12,7 @@ async fn main() -> anyhow::Result<()> {
     dotenv().ok();
 
     let cfg = envy::from_env::<Config>().unwrap();
-    // add health check route
+
     let pool = PgPoolOptions::new()
         .max_connections(10)
         .connect(&cfg.database_url)
