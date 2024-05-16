@@ -1,14 +1,16 @@
-version: '3.8'
+name: rust-rest-api
 
 services:
-  rust_app:
+  web:
     build: .
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+        restart: true
     env_file:
       - .env
     environment:
-      DATABASE_URL: "postgres://postgres:password@db:5432/mydatabase"
+      DATABASE_URL: "postgres://user:password@db:5432/mydatabase"
     ports:
       - "3000:3000"
     networks:
@@ -17,11 +19,20 @@ services:
   db:
     image: postgres:latest
     environment:
-      POSTGRES_USER: ${PG_USER:-postgres}
-      POSTGRES_PASSWORD: ${PG_PASSWORD:-password}
-      POSTGRES_DB: ${PG_NAME:-mydatabase}
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-mydatabase}
     ports:
-      - "5432:5432"
+      - "5111:5432"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "sh -c 'pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-mydatabase}'"
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
     volumes:
       - db_data:/var/lib/postgresql/data
     networks:

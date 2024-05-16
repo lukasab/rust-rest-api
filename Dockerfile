@@ -5,10 +5,10 @@ FROM rust:1.78.0 AS builder
 WORKDIR /app
 
 # Copy the Cargo.toml and Cargo.lock files
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml Cargo.lock /
 
 # Copy the source code
-COPY src ./src
+COPY src /src
 
 # Build the dependencies only
 RUN cargo build --release
