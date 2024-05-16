@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  rust_app:
+    build: .
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgres://postgres:password@db:5432/mydatabase"
+    ports:
+      - "3000:3000"
+    networks:
+      - default_network
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${PG_USER:-postgres}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-password}
+      POSTGRES_DB: ${PG_NAME:-mydatabase}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - default_network
+
+volumes:
+  db_data:
+
+
+networks:
+  default_network:

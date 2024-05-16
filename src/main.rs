@@ -1,11 +1,23 @@
-use axum::{routing::get, Router};
+mod config;
+
+use dotenvy::dotenv;
+use envy;
+use rust_rest_api::api;
+use rust_rest_api::config::Config;
+use sqlx::postgres::PgPoolOptions;
 
 #[tokio::main]
-async fn main() {
-    // build our application with a single route
-    let app = Router::new().route("/", get(|| async { "Hello, World!" }));
+async fn main() -> anyhow::Result<()> {
+    // load environment variables from .env file
+    dotenv().ok();
 
-    // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    let cfg = envy::from_env::<Config>().unwrap();
+    // add health check route
+    let pool = PgPoolOptions::new()
+        .max_connections(10)
+        .connect(&cfg.database_url)
+        .await?;
+
+    api::serve(cfg, pool).await?;
+    Ok(())
 }
