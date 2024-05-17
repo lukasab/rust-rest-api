@@ -54,6 +54,7 @@ fn api_router() -> Router {
 pub async fn health_check_handler(
     Extension(_state): Extension<Arc<AppState>>,
 ) -> impl IntoResponse {
+    tracing::info!("Health check request received");
     const MESSAGE: &str = "API Services";
 
     let json_response = serde_json::json!({
