@@ -8,6 +8,7 @@ use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 
 mod error;
+mod movies;
 
 pub use error::Error;
 
@@ -47,8 +48,9 @@ pub async fn serve(config: Config, db: PgPool) -> Result<()> {
 }
 
 fn api_router() -> Router {
-    Router::new().route("/healthcheck", get(health_check_handler))
-    //.merge(users::router()) // Add this line to merge the users router
+    Router::new()
+        .route("/healthcheck", get(health_check_handler))
+        .merge(movies::router())
 }
 
 pub async fn health_check_handler(
