@@ -1,4 +1,5 @@
 use axum::{http::StatusCode, routing::get, Json, Router};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;
@@ -14,7 +15,11 @@ pub fn router() -> Router {
 #[derive(Serialize)]
 struct Movie {
     id: i32,
-    name: String,
+    title: String,
+    release_year: i32,
+    genre: String,
+    poster_url: Option<String>,
+    created_at: DateTime<Utc>,
 }
 
 pub async fn get_movies(
@@ -40,8 +45,10 @@ pub async fn get_movies(
 
 #[derive(Deserialize)]
 pub struct CreateMovie {
-    pub id: i32,
-    pub name: String,
+    pub title: String,
+    pub release_year: i32,
+    pub genre: String,
+    pub poster_url: Option<String>,
 }
 
 pub async fn create_movie(
@@ -52,32 +59,19 @@ pub async fn create_movie(
     let db = &state.db;
     let movie = sqlx::query_as!(
         Movie,
-        "INSERT INTO movies (id, name) VALUES ($1, $2) RETURNING *",
-        movie.id,
-        movie.name
+        "INSERT INTO movies (title, release_year, genre, poster_url) VALUES ($1, $2, $3, $4) RETURNING *",
+        movie.title,
+        movie.release_year,
+        movie.genre,
+        movie.poster_url
     )
     .fetch_one(db)
     .await
-    .map_err(|e| match e {
-        sqlx::Error::Database(ref db_error) => {
-            if db_error.kind() == sqlx::error::ErrorKind::UniqueViolation {
-                return (
-                    StatusCode::UNPROCESSABLE_ENTITY,
-                    json!({"success": false, "error": "Movie already exists"}).to_string(),
-                );
-            } else {
-                return (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    json!({"success": false, "error": "DB error"}).to_string(),
-                );
-            }
-        }
-        _ => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                json!({"success": false, "error": e.to_string()}).to_string(),
-            );
-        }
+    .map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            json!({"success": false, "error": e.to_string()}).to_string(),
+        )
     })?;
 
     Ok((
