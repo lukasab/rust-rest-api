@@ -1,6 +1,6 @@
 # Rust REST API
 
-I want to try out creating a REST api in rust.Such service must have the following requirements:
+I want to try out creating a REST api in rust. Such service must have the following requirements:
 
 - Asynchronous endpoints
 - Type validation in inputs
