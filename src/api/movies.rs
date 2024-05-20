@@ -1,27 +1,40 @@
-use axum::{http::StatusCode, routing::get, Json, Router};
+use std::sync::Arc;
+
+use axum::{http::StatusCode, routing::get, Extension, Json, Router};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::sync::Arc;
+use utoipa::ToSchema;
 
 use crate::api::AppState;
-use axum::Extension;
 
 pub fn router() -> Router {
     Router::new().route("/movies", get(get_movies).post(create_movie))
-    //.merge(users::router()) // Add this line to merge the users router
 }
 
-#[derive(Serialize)]
-struct Movie {
+#[derive(Serialize, ToSchema)]
+pub struct Movie {
     id: i32,
+    #[schema(example = "The Matrix")]
     title: String,
+    #[schema(example = 2021)]
     release_year: i32,
+    #[schema(example = "Action")]
     genre: String,
+    #[schema(value_type = Url, example = "https://example.com/poster.jpg")]
     poster_url: Option<String>,
+    #[schema(example = "2021-08-01T12:00:00Z")]
     created_at: DateTime<Utc>,
 }
 
+#[utoipa::path(
+    get,
+    path = "/movies",
+    responses(
+        (status = 200, description = "Return all movies", body = [Movie]),
+        (status = 500, description = "Internal server error", body = Option<String>)
+    )
+)]
 pub async fn get_movies(
     state: Extension<Arc<AppState>>,
 ) -> Result<(StatusCode, String), (StatusCode, String)> {
@@ -33,24 +46,34 @@ pub async fn get_movies(
         .map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                json!({"success": false, "error": e.to_string()}).to_string(),
+                json!(e.to_string()).to_string(),
             )
         })?;
 
-    Ok((
-        StatusCode::OK,
-        json!({"success": true, "data": movies}).to_string(),
-    ))
+    Ok((StatusCode::OK, json!(movies).to_string()))
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub struct CreateMovie {
+    #[schema(example = "The Matrix")]
     pub title: String,
+    #[schema(example = 2021)]
     pub release_year: i32,
+    #[schema(example = "Action")]
     pub genre: String,
+    #[schema(value_type = Url, example = "https://example.com/poster.jpg")]
     pub poster_url: Option<String>,
 }
 
+#[utoipa::path(
+    post,
+    path = "/movies",
+    request_body = CreateMovie,
+    responses(
+        (status = 200, description = "Sucessufully created new movie", body = Movie),
+        (status = 500, description = "Internal server error", body = Option<String>)
+    )
+)]
 pub async fn create_movie(
     state: Extension<Arc<AppState>>,
     Json(movie): Json<CreateMovie>,
@@ -70,12 +93,9 @@ pub async fn create_movie(
     .map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            json!({"success": false, "error": e.to_string()}).to_string(),
+            json!(e.to_string()).to_string(),
         )
     })?;
 
-    Ok((
-        StatusCode::CREATED,
-        json!({"success": true, "data": movie}).to_string(),
-    ))
+    Ok((StatusCode::CREATED, json!(movie).to_string()))
 }
