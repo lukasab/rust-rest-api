@@ -30,9 +30,10 @@ pub struct Movie {
 #[utoipa::path(
     get,
     path = "/movies",
+    tag = "Movies",
     responses(
-        (status = 200, description = "Return all movies", body = [Movie]),
-        (status = 500, description = "Internal server error", body = Option<String>)
+        (status = StatusCode::OK, description = "Return all movies", body = [Movie]),
+        (status = StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error", body = Option<String>)
     )
 )]
 pub async fn get_movies(
@@ -68,10 +69,11 @@ pub struct CreateMovie {
 #[utoipa::path(
     post,
     path = "/movies",
+    tag = "Movies",
     request_body = CreateMovie,
     responses(
-        (status = 200, description = "Sucessufully created new movie", body = Movie),
-        (status = 500, description = "Internal server error", body = Option<String>)
+        (status = StatusCode::CREATED, description = "Sucessufully created new movie", body = Movie),
+        (status = StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error", body = Option<String>)
     )
 )]
 pub async fn create_movie(

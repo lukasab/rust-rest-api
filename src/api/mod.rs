@@ -25,18 +25,10 @@ pub struct AppState {
 
 #[derive(OpenApi)]
 #[openapi(
-        paths(
-            health_check_handler,
-            movies::get_movies,
-            movies::create_movie,
-        ),
-        components(
-            schemas(HealthCheckResponse, movies::Movie, movies::CreateMovie),
-        ),
-        tags(
-            (name = "Rust rest api", description = "Sample project to demonstrate a Rust REST API.")
-        )
-    )]
+    info(description = "Rust example API Services"),
+    paths(health_check_handler, movies::get_movies, movies::create_movie,),
+    components(schemas(HealthCheckResponse, movies::Movie, movies::CreateMovie))
+)]
 struct ApiDoc;
 
 pub async fn serve(config: Config, db: PgPool) -> Result<()> {
@@ -82,6 +74,7 @@ struct HealthCheckResponse {
 #[utoipa::path(
     get,
     path = "/healthcheck",
+    tag = "Health Check",
     responses(
         (status = 200, description = "Health check endpoint", body = HealthCheckResponse)
     )
